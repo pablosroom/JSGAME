@@ -1,0 +1,13 @@
+body{
+    background-color: rgb(33, 33, 33);
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+canvas{
+    background-color: rgb(80, 65, 45);
+    display: block;
+    margin: 0;
+}
