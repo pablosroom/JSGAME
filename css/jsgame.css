@@ -5,9 +5,11 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    image-rendering: pixelated;
 }
 canvas{
     background-color: rgb(80, 65, 45);
     display: block;
     margin: 0;
+    transform: scale(2);
 }
