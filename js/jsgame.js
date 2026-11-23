@@ -3,7 +3,7 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 const headFrame = { sx: 8,  sy: 22, sw: 32, sh: 30 };   //coordinaten van het hoofd van isaac dat naar beneden kijkt
 const bodyFrame = { sx: 8,  sy: 76, sw: 32, sh: 20 }; //benen naar beneden
-const sprite = { x: 215, y: 175, speed: 3, width: 30, height: 30 };
+const sprite = { x: 215, y: 175, speed: 180, width: 32, height: 38 }; //speed = i per seconde
 const isaac = new Image();
 const basement = new Image();
 const tutorial = new Image();
@@ -40,20 +40,20 @@ function stop_on_edge() {
     sprite.y = Math.max(border_top, Math.min(canvas.height - sprite.height - border_bottom, sprite.y));//zorgt dat er verschillende lengtes van de muur worden bijgehouden voor elke muur (boven en onder)
 }
 
-function moveright(){
-    sprite.x += sprite.speed; //beweegt met elke frame
+function moveright(dt){ 
+    sprite.x += sprite.speed * dt; 
 }
 
-function moveleft(){
-    sprite.x -= sprite.speed; 
+function moveleft(dt){  
+    sprite.x -= sprite.speed * dt; 
 }
 
-function moveup(){
-    sprite.y -= sprite.speed; 
+function moveup(dt){    
+    sprite.y -= sprite.speed * dt; 
 }
 
-function movedown(){
-    sprite.y += sprite.speed; 
+function movedown(dt){
+    sprite.y += sprite.speed * dt; 
 }
 
 function draw(){
@@ -67,14 +67,18 @@ function draw(){
     drawIsaac();
 }
 
-function loop() {
-    if (keys["a"])  moveleft();
-    if (keys["d"]) moveright();
-    if (keys["w"])    moveup();
-    if (keys["s"])  movedown();
-    stop_on_edge()
+let lastTime = 0;
+function loop(time) {
+    const dt = Math.min((time - lastTime) / 1000, 0.05);  // seconde sinds de laatste frame
+    lastTime = time;//zorgt ervoor dat de snelheid hetzelfde is no matter de fps
+
+    if (keys["a"]) moveleft(dt);
+    if (keys["d"]) moveright(dt);
+    if (keys["w"]) moveup(dt);
+    if (keys["s"]) movedown(dt);
+    stop_on_edge();
     draw();
-    requestAnimationFrame(loop);//start de animatie loop
+    requestAnimationFrame(loop);
 }
 
 isaac.onload = () => {
