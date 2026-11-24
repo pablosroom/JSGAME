@@ -5,8 +5,8 @@ const anim = { time: 0, fps: 12, facing: "down" };
 const headFrame = { sx: 8,  sy: 22, sw: 32, sh: 30 };   //coordinaten van het hoofd van isaac dat naar beneden kijkt
 
 const heads = makeFrames(8, 22, 32, 30, 8, 40);
+const walkSide = makeFrames(8, 120, 32, 20, 10, 32);
 const headFor = { down: heads[0], right: heads[2], up: heads[4], left: heads[6] };//maakt een lijst van frames waar het hoofd naar een bepaalde kant kijkt
-const headOffset = { down: 0, right: 0, up: 0, left: -2 }; //verschuift het hoofd per richting (in pixels)
 
 function makeFrames(sx, sy, sw, sh, count, step) {
     const frames = [];
@@ -42,23 +42,40 @@ function stop_on_edge() {
 }
 
 function drawIsaac() {  
-    const index = Math.floor(anim.time * anim.fps) % walkDown.length; //welk frame nu getekend wordt
-    const bodyFrame = walkDown[index];
+    const horizontal = anim.facing === "left" || anim.facing === "right"; //kijkt of isaac opzij loopt
+    const frames = horizontal ? walkSide : walkDown; //kiest de rij met frames die bij de richting past
+    const index = Math.floor(anim.time * anim.fps) % frames.length; //welk frame nu getekend wordt
+    const bodyFrame = frames[index];
     const headFrame = headFor[anim.facing]; //kiest het hoofd dat bij de richting past
-    const bodyY = sprite.y + 19;
+    const x = Math.round(sprite.x); //afgeronde positie, zodat de pixels scherp blijven
+    const y = Math.round(sprite.y);
+    const bodyY = y + 19;
 
-    ctx.drawImage(
-        isaac,
-        bodyFrame.sx, bodyFrame.sy, bodyFrame.sw, bodyFrame.sh,
-        sprite.x, bodyY, bodyFrame.sw, bodyFrame.sh
-    );
+    ctx.save();
+    if (anim.facing === "left") {
+        ctx.translate(x + bodyFrame.sw, 0); //spiegelt de benen horizontaal
+        ctx.scale(-1, 1);//flipt isaac
+        ctx.drawImage(
+            isaac,
+            bodyFrame.sx, bodyFrame.sy, bodyFrame.sw, bodyFrame.sh,
+            0, bodyY, bodyFrame.sw, bodyFrame.sh
+        );
+    } else {
+        ctx.drawImage(
+            isaac,
+            bodyFrame.sx, bodyFrame.sy, bodyFrame.sw, bodyFrame.sh,
+            x, bodyY, bodyFrame.sw, bodyFrame.sh
+        );
+    }
+    ctx.restore();
 
     ctx.drawImage(
         isaac,
         headFrame.sx, headFrame.sy, headFrame.sw, headFrame.sh,
-        sprite.x, sprite.y, headFrame.sw, headFrame.sh
+        x, y, headFrame.sw, headFrame.sh
     );
-}   
+    
+}
 
 function update_camera() {
     camera.x = sprite.x + sprite.width / 2 - canvas.width / 2;// centered de camera altijd op isaac
