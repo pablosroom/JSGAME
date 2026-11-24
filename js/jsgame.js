@@ -3,8 +3,22 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 const anim = { time: 0, fps: 12, facing: "down" };
 const headFrame = { sx: 8,  sy: 22, sw: 32, sh: 30 };   //coordinaten van het hoofd van isaac dat naar beneden kijkt
-const bodyFrame = { sx: 8,  sy: 76, sw: 32, sh: 20 }; //benen naar beneden
-const sprite = { x: 1589, y: 756, speed: 180, width: 32, height: 38 }; //speed = i per seconde
+
+const heads = makeFrames(8, 22, 32, 30, 8, 40);
+const headFor = { down: heads[0], right: heads[2], up: heads[4], left: heads[6] };//maakt een lijst van frames waar het hoofd naar een bepaalde kant kijkt
+const headOffset = { down: 0, right: 0, up: 0, left: -2 }; //verschuift het hoofd per richting (in pixels)
+
+function makeFrames(sx, sy, sw, sh, count, step) {
+    const frames = [];
+    for (let i = 0; i < count; i++) { //doet voor elke frame 1 push naar de volgende sectie van de sprite sheet
+        frames.push({ sx: sx + i * step, sy: sy, sw: sw, sh: sh });
+    }
+    return frames;
+}
+
+const walkDown = makeFrames(8, 76, 32, 20, 10, 32); //alle frames van de rij "Walk up/down"
+
+const sprite = { x: 1589, y: 756, speed: 180, width: 32, height: 38 }; //speed = i pixels per seconde
 const world = { width: 3210, height: 1550 };  
 const camera = { x: 0, y: 0 };
 const isaac = new Image();
@@ -14,9 +28,9 @@ isaac.src = "assets/isaac_sheet.png";
 basement.src = "assets/basement.png"
 tutorial.src = "assets/tutorial.png"
 
-const border_top = 30;//pixels van de border van het scherm waar de muur is
-const border_bottom = 50;//andere waarde voor onder kant en zijkanten
-const border_x = 40;
+const border_top = 10;//pixels van de border van het scherm waar de muur is
+const border_bottom = 20;//andere waarde voor onder kant en zijkanten
+const border_x = 35;
 
 const keys = {};
 window.addEventListener("keydown", (e) => { keys[e.key] = true; });//trackt welke keys worden ingedrukt
@@ -28,6 +42,9 @@ function stop_on_edge() {
 }
 
 function drawIsaac() {  
+    const index = Math.floor(anim.time * anim.fps) % walkDown.length; //welk frame nu getekend wordt
+    const bodyFrame = walkDown[index];
+    const headFrame = headFor[anim.facing]; //kiest het hoofd dat bij de richting past
     const bodyY = sprite.y + 19;
 
     ctx.drawImage(
@@ -41,7 +58,7 @@ function drawIsaac() {
         headFrame.sx, headFrame.sy, headFrame.sw, headFrame.sh,
         sprite.x, sprite.y, headFrame.sw, headFrame.sh
     );
-}
+}   
 
 function update_camera() {
     camera.x = sprite.x + sprite.width / 2 - canvas.width / 2;// centered de camera altijd op isaac
@@ -89,13 +106,20 @@ function loop(time) {
     const dt = Math.min((time - lastTime) / 1000, 0.05);  // seconde sinds de laatste frame
     lastTime = time;//zorgt ervoor dat de snelheid hetzelfde is no matter de fps
 
+    moving = false; //begint elke frame opnieuw
+
     if (keys["a"]) moveleft(dt);
     if (keys["d"]) moveright(dt);
     if (keys["w"]) moveup(dt);
     if (keys["s"]) movedown(dt);
+
+    if (moving) anim.time += dt; //de animatie timer loopt alleen tijdens het lopen
+    else anim.time = 0; //stilstaan = terug naar het eerste frame
+
     stop_on_edge();
     update_camera();
     draw();
+
     requestAnimationFrame(loop);
 }
 
